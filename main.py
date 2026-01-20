@@ -1,6 +1,12 @@
 from pytubefix import YouTube
 from pytubefix import Search
 import humanize
+import os
+
+destination_foulder = os.path.join(".", "Destination")
+
+if not os.path.exists(destination_foulder):
+    os.makedirs(destination_foulder)
 
 def search_fun():
     search_input = input("Search: ")
@@ -44,7 +50,7 @@ def download(url):
         
         print(f"Downloading: {yt.title}...")
 
-        file_path = stream.download(output_path="./destination")
+        file_path = stream.download(output_path=destination_foulder)
         print(f"Success! Saved to: {file_path}")
         
     except Exception as e:
