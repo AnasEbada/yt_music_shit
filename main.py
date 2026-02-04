@@ -2,11 +2,11 @@ from pytubefix import YouTube
 from pytubefix import Search
 import humanize
 import os
+import requests
+import ffmpeg
 
 destination_foulder = os.path.join(".", "Destination")
-
-if not os.path.exists(destination_foulder):
-    os.makedirs(destination_foulder)
+os.makedirs(destination_foulder, exist_ok=True)
 
 def search_fun():
     search_input = input("Search: ")
@@ -18,7 +18,7 @@ def search_fun():
         organize_num += 1
         clean_title = i.title.replace("|", "-")
         clean_date = str(i.publish_date).split(" ")
-        print(f"{organize_num}. {clean_title} | {i.author} | {humanize.intword(i.views)} | {clean_date[0]} | {i.watch_url}")
+        print(f"{organize_num}. {clean_title} | {i.author} | {humanize.intword(i.views)} | {clean_date[0]} ")
     choice = int(input("Which one did you choose (number): "))
     return output.videos[choice - 1].watch_url
 
