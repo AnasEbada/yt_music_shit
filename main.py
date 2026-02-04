@@ -3,7 +3,6 @@ from pytubefix import Search
 import humanize
 import os
 import requests
-import ffmpeg
 
 destination_foulder = os.path.join(".", "Destination")
 os.makedirs(destination_foulder, exist_ok=True)
@@ -22,8 +21,18 @@ def search_fun():
     choice = int(input("Which one did you choose (number): "))
     return output.videos[choice - 1].watch_url
 
+
 def download(url):
     yt = YouTube(url)
+    thumbnail = yt.thumbnail_url
+
+    response = requests.get(thumbnail, stream=True)
+    with open("destination_foulder/thumbnail.jpg", "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+
+
     user_choice = input("Do you want a video or an audio (A/V)? ").upper()
     
     if user_choice == "V":
@@ -46,7 +55,10 @@ def download(url):
 
     try:
         final_choice = int(input("\nEnter ITAG number to download: "))
-        stream = streams.get_by_itag(final_choice)
+        if not final_choice :
+            stream = streams.first()
+        else:
+            stream = streams.get_by_itag(final_choice)
         
         print(f"Downloading: {yt.title}...")
 
