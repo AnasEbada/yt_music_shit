@@ -109,9 +109,10 @@ def  main_search():
                         clean_date = str(i.publish_date).split(" ")
                         print(f"{organize_num}. {clean_title} | {i.author} | {humanize.intword(i.views)} | {clean_date[0]} ")
                     try:
-                        choice = int(input("Which one do you choose (number): "))
-                        if 1 <= choice <= n_int:
-                            return sorted_output[choice - 1].watch_url
+                        choice = input("Which one do you choose : ").lower()
+                        good_choice = int(choice)
+                        if 1 <= good_choice <= n_int:
+                            return sorted_output[good_choice - 1].watch_url
                         else:
                             print("Invalid choice: out of range.")
                     except ValueError:
@@ -142,13 +143,13 @@ def attach_thumbnail(file_path, thumb_path):
     
     cmd = ['ffmpeg', '-i', file_path, '-i', thumb_path]
     
-    if ext == '.mp3':
-        cmd += ['-map', '0:0', '-map', '1:0', '-c', 'copy', '-id3v2_version', '3', 
-                '-metadata:s:v', 'title="Album cover"', '-metadata:s:v', 'comment="Cover (front)"']
-    elif ext in ['.mp4', '.m4a']:
+    if ext in ['.mp4', '.m4a']:
         cmd += ['-map', '0:a', '-map', '1:v', '-c', 'copy', '-disposition:v:0', 'attached_pic']
-    elif ext in ['.webm', '.opus']:
-        cmd += ['-map', '0', '-map', '1', '-c', 'copy', '-metadata:s:v', 'title="Album cover"']
+ #  elif ext == '.mp3':
+ #      cmd += ['-map', '0:0', '-map', '1:0', '-c', 'copy', '-id3v2_version', '3', 
+ #              '-metadata:s:v', 'title="Album cover"', '-metadata:s:v', 'comment="Cover (front)"']
+ #  elif ext in ['.webm', '.opus']:
+ #      cmd += ['-map', '0', '-map', '1', '-c', 'copy', '-metadata:s:v', 'title="Album cover"']
     else:
         print(f"Unknown extension {ext}, skipping thumbnail link.")
         return
@@ -162,16 +163,14 @@ def attach_thumbnail(file_path, thumb_path):
     except subprocess.CalledProcessError as e:
         print(f"FFmpeg failed: {e.stderr.decode()}")
         if os.path.exists(temp_output):
-            os.remove(temp_output)  # Clean up temp file on failure
-    finally:
-        if os.path.exists(thumb_path):
-            os.remove(thumb_path)
+            os.remove(temp_output)
 
 
 def download(url):
     yt = YouTube(url)
     
     thumbnail_img(url)
+    file_path = None
 
     while True:
         user_choice = input("Do you want a video or an audio (A/V)? ").upper()
@@ -182,10 +181,10 @@ def download(url):
     
     if user_choice == "V":
         is_video = True
-        streams = yt.streams.filter(progressive=True).order_by("resolution").desc()
+        streams = yt.streams.filter(progressive=True, file_extension='mp4').order_by("resolution").desc()
     else:
         is_video = False
-        streams = yt.streams.filter(only_audio=True).order_by("abr").desc()
+        streams = yt.streams.filter(only_audio=True, file_extension='mp4').order_by("abr").desc()
 
     if not streams:
         print("No streams found for this category.")
@@ -212,13 +211,14 @@ def download(url):
         print(f"Success! Saved to: {file_path}")  
     except Exception as e:
         print(f"An error occurred: {e}")
+        return
 
     try:
         print("Processing file with FFmpeg...")
         attach_thumbnail(file_path, thumb_path) 
-        # link_thumbnail should handle the 'temp' file renaming internally 
+
     finally:
-        # This block runs NO MATTER WHAT (success or error)
+
         if os.path.exists(thumb_path):
             os.remove(thumb_path)
             print("Cleaned up temporary thumbnail.")
